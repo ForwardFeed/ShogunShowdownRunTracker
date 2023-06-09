@@ -7,7 +7,7 @@ import datetime
 
 directory="./"
 filename=directory+"RunSaveData.dat"
-output_filename=directory+"runs.csv"
+output_filename="runs.csv"
 
 last_modified=str()
 row=""
@@ -62,10 +62,8 @@ def loglatest():
         elif prev_room < room_cleared:
             prev_room = room_cleared
             
-        elif room_cleared == 2:
-            print(json_decoded)
         elif room_cleared == 3 and not dasher:
-            print(json_decoded)
+        
             dasher=True
             row+=time+";"
             print("dasher killed: ", time)
