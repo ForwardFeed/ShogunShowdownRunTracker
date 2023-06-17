@@ -5,90 +5,81 @@ import base64
 import json
 import datetime
 
-directory="./"
-filename=directory+"RunSaveData.dat"
-output_filename="runs.csv"
-
-last_modified=str()
-row=""
-
-prev_room=0
-dasher=False
-impaler=False
-ume=False
 
 
-def init():
-    try:
-        global last_modified
-        last_modified=os.path.getmtime(filename)
-        loglatest()
-    except:
-        print("cannot find or access :%s" % filename)
-        if os.path.exists(directory+"SaveData.dat"):
-            print("please launch the game and just click new game, and this script should work")
-            #maybe useless i dunno
-            last_modified=os.path.getmtime(SaveData.dat)
-        else:
-            print("doesn't sound like the right directory to me")
-        quit()
+def SSRunTracker:
+	def __init__(self, directory):
+		self.filename=directory+"RunSaveData.dat"
+		self.prev_room=0
+		self.boss=[0, 0, 0]
+		self.boss_beat_room=[3,6,10]
+		self.current_boss=0
+		
+		try:
+		    self.last_modified=os.path.getmtime(self.filename)
+		except:
+		    print("cannot find or access :%s" % filename)
+		    if os.path.exists(directory+"SaveData.dat"):
+		        print("please launch the game and just click new game, and this script should work")
+		    else:
+		        print("doesn't sound like the right directory to me")
+		    quit()
+	
+	def reset(self):
+		self.boss=[0, 0, 0]
+		self.current_boss=0
+		self.prev_room=0
+		
+	def hasbeenbeaten(self, room_cleared):
+		if self.room_cleared === self.boss_beat_room[self.current_boss]:
+			return True
+		return False
+	
+	def beaten(self, time):
+		self.boss[self.current_boss]=time
+		self.current_boss+=1
+	
+	def scan(self):
+		 with open(filename, 'r') as file:
+		 	json_decoded=json.loads(base64.b64decode(file.read()))
+		 	time = str(datetime.timedelta(seconds=json_decoded['runStats']['time']))
+		 	room_cleared=json_decoded['runStats']['numberOfCombatRoomsCleared']
+		 	#location = json_decoded['mapSaveData']['currentLocationName'].replace("\n", " ")
+        	#room = json_decoded['progressionSaveData']['iRoomInProgress']
+		 	
+		 	if self.prev_room > room_cleared:
+				self.reset()
+				return True
+				
+			if self.hasbeenbeaten(room_cleared):
+				self.beaten(time)
+			return False
+	
+	def log(self):
+		with open("runs.csv", 'a') as output:
+            row=""
+            for boss in self.boss
+            	if boss == 0:
+            		row+=";"
+            	else:
+            		row+=boss+";"
+            
+            output.write(row)
+	
+	def checkfile(self):
+		current_modified=os.path.getmtime(self.filename)
+		if current_modified != self.last_modified:
+        	self.last_modified=current_modified
+        	return true
+        return false
+        	
+
     
-
-def loglatest():
-    global prev_room, row,  dasher, impaler, ume
-    with open(filename, 'r') as file:
-        json_decoded=json.loads(base64.b64decode(file.read()))
-        time = str(datetime.timedelta(seconds=json_decoded['runStats']['time']))
-        #location = json_decoded['mapSaveData']['currentLocationName'].replace("\n", " ")
-        #room = json_decoded['progressionSaveData']['iRoomInProgress']
-        room_cleared=json_decoded['runStats']['numberOfCombatRoomsCleared']
-        if prev_room > room_cleared:
-            # means a reset
-            print("reset")
-            prev_room=room_cleared
-            
-            if not dasher:
-                row+="--;"
-            if not impaler:
-                row+="--;"
-            if not ume:
-                row+="--;"
-            dasher=False
-            impaler=False
-            ume=False
-            with open(output_filename, 'a') as output:
-                output.write(row)
-                row=""
-        elif prev_room < room_cleared:
-            prev_room = room_cleared
-            
-        elif room_cleared == 3 and not dasher:
-        
-            dasher=True
-            row+=time+";"
-            print("dasher killed: ", time)
-            
-        elif room_cleared == 6 and not impaler:
-            impaler=True
-            row+=time+";"
-            print("impaler killed", time)
-        
-        elif room_cleared == 10 and not ume:
-            ume=True
-            row+=time+";"
-            print("Ume killed: %s", time)
-        #print(time, room_cleared) 
-       
-init()
-
+#init()
+tracker = SSRunTracker()
 while True:
     time.sleep(0.5)
-    
-    current_modified=os.path.getmtime(filename)
-    if current_modified != last_modified:
-        last_modified=current_modified
-        try:
-            loglatest()
-        except:
-            #sometimes weird stuff happens and this gets triggered out of nowhere
-            print("ouchie")
+    if tracker.checkfile():
+    	if tracker.scan():
+    		tracker.log
+   
