@@ -26,15 +26,18 @@ class SSRunTracker:
             else:
                 print("doesn't sound like the right directory to me")
                 quit()
+        if not os.path.exists("./runs.csv"):
+        	with open("runs.csv", 'a') as output:
+        		output.write("dasher;impaler;ume;")
         return True
-
+		
     def reset(self):
         self.boss=[0, 0, 0]
         self.current_boss=0
         self.prev_room=0
 		
     def hasbeenbeaten(self, room_cleared):
-        if self.room_cleared == self.boss_beat_room[self.current_boss]:
+        if room_cleared == self.boss_beat_room[self.current_boss]:
             return True
         return False
 
@@ -45,19 +48,21 @@ class SSRunTracker:
     def scan(self):
         with open(self.filename, 'r') as file:
             json_decoded=json.loads(base64.b64decode(file.read()))
-            timebeat_time= str(datetime.timedelta(seconds=json_decoded['runStats']['time']))
+            beat_time= str(datetime.timedelta(seconds=json_decoded['runStats']['time']))
             room_cleared=json_decoded['runStats']['numberOfCombatRoomsCleared']
             #location = json_decoded['mapSaveData']['currentLocationName'].replace("\n", " ")
             #room = json_decoded['progressionSaveData']['iRoomInProgress']
-
             if self.prev_room > room_cleared:
                 self.reset()
                 return True
+            if self.prev_room < room_cleared:
+                self.prev_room = room_cleared
             if self.hasbeenbeaten(room_cleared):
                 self.beaten(beat_time)
                 return False
 
     def log(self):
+        print("logging")
         with open("runs.csv", 'a') as output:
             row=""
             for boss in self.boss:
@@ -65,7 +70,7 @@ class SSRunTracker:
                     row+=";"
                 else:
                     row+=boss+";"
-            output.write(row)
+            output.write("\n"+row)
 	
     def checkfile(self):
         try:
@@ -78,7 +83,6 @@ class SSRunTracker:
             return False
 
     
-#init()
 directory=""
 tracker = SSRunTracker(directory)
 tracker.init()
